@@ -158,6 +158,15 @@ const literal = (literal: Instruction): Instruction[] => {
         Instruction.INST_LITERAL, literal
     ]
 }
+const attack = (from: EntityIndex, to: EntityIndex, coeff: number = 1): Instruction[] => {
+    return [
+        ...getAttribute(to, Attribute.HP),
+        ...getAttribute(from, Attribute.ATTACK),
+        ...calculator(Operator.MUL, coeff),
+        ...calculator(Operator.SUB),
+        ...setAttribute(to, Attribute.HP),
+    ]
+}
 const assert = (value = void 0, bytes: Instruction[] = [Instruction.INST_COPY]) => {
     return DEBUG ? [
         ...bytes,
@@ -168,19 +177,15 @@ const vm = new VM(runFunc);
 const bytes = [];
 const actions = [
     move(EntityIndex.Hero, -2, 1),
-    assert(),
+
     setAttribute(EntityIndex.Hero, Attribute.HP, 100),
-    assert(),
+    setAttribute(EntityIndex.Hero, Attribute.ATTACK, 10),
+
+    setAttribute(EntityIndex.Enemy, Attribute.HP, 50),
     setAttribute(EntityIndex.Enemy, Attribute.ATTACK, 5),
-    assert(),
-    getAttribute(EntityIndex.Hero, Attribute.HP),
-    assert(100),
-    getAttribute(EntityIndex.Enemy, Attribute.ATTACK),
-    assert(5),
-    calculator(Operator.SUB),
-    assert(95),
-    setAttribute(EntityIndex.Hero, Attribute.HP),
-    assert(),
+
+    attack(EntityIndex.Hero, EntityIndex.Enemy),
+    attack(EntityIndex.Enemy, EntityIndex.Hero),
 ];
 actions.forEach(act => {
     bytes.push(...act);
